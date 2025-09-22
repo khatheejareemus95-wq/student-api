@@ -14,7 +14,10 @@ const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 
 // ensure data dir/file, read/write helpers (see earlier full code sample)...
 
-app.get('/api/students', async (req, res) => { /* read and return students */ });
+app.get("/", (req, res) => {
+  res.send("🎉 Student API is running! Use /api/students to fetch students.");
+});
+
 app.post('/api/students', async (req, res) => { /* validate and append student */ });
 
 const PORT = process.env.PORT || 3000;
