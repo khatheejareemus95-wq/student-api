@@ -1,24 +1,74 @@
-// server.js (paste full code given earlier)
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs').promises;
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+// server.js
+app.post('/api/students', async (req, res) => {
+try {
+const { name, age, course, year, status } = req.body || {};
 
-const app = express();
-app.use(cors()); // allow all origins for assignment
-app.use(express.json());
 
-const DATA_DIR = path.join(__dirname, 'data');
-const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
+// required: name, course, year
+if (!isNonEmptyString(name) || !isNonEmptyString(course) || !isNonEmptyString(year)) {
+return res.status(400).json({ error: 'name, course, and year are required and cannot be blank' });
+}
 
-// ensure data dir/file, read/write helpers (see earlier full code sample)...
 
-app.get("/api/students", (req, res) => {
-  res.send("🎉 Student API is running! Use /api/students to fetch students.");
+// age must be a number > 0
+const nAge = Number(age);
+if (Number.isNaN(nAge) || nAge <= 0) {
+return res.status(400).json({ error: 'age is required and must be a number greater than 0' });
+}
+
+
+const student = {
+id: Date.now().toString(),
+name: name.trim(),
+age: nAge,
+course: course.trim(),
+year: year.trim(),
+status: isNonEmptyString(status) ? status.trim() : 'active',
+createdAt: new Date().toISOString(),
+};
+
+
+const students = await readStudents();
+students.push(student);
+await writeStudents(students);
+
+
+// Return created resource
+return res.status(201).json(student);
+} catch (err) {
+console.error('POST /api/students error:', err);
+return res.status(500).json({ error: 'Internal server error' });
+}
 });
 
-app.post('/api/students', async (req, res) => { /* validate and append student */ });
+
+// GET /api/students
+app.get('/api/students', async (req, res) => {
+try {
+const students = await readStudents();
+return res.json(students);
+} catch (err) {
+console.error('GET /api/students error:', err);
+return res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+
+// Basic health check
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+
+// global error handler fallback
+app.use((err, req, res, next) => {
+console.error('Unhandled error:', err);
+res.status(500).json({ error: 'Internal server error' });
+});
+
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+ensureDataFile().then(() => {
+app.listen(PORT, () => console.log(`Student API listening on port ${PORT}`));
+}).catch(err => {
+console.error('Failed to start server:', err);
+process.exit(1);
+});
