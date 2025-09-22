@@ -1,86 +1,55 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Student List</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .student { padding: 8px; border-bottom: 1px solid #ddd; }
-    .form-row { margin-bottom: 8px; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Student Management</title>
 </head>
 <body>
-  <h1>Students</h1>
+  <h1>Student List</h1>
+  <ul id="studentList"></ul>
 
+  <h2>Add Student</h2>
   <form id="studentForm">
-    <div class="form-row">
-      <input name="name" placeholder="Name" required />
-    </div>
-    <div class="form-row">
-      <input name="age" type="number" placeholder="Age" required />
-    </div>
-    <div class="form-row">
-      <input name="course" placeholder="Course" required />
-    </div>
-    <div class="form-row">
-      <input name="year" placeholder="Year (e.g. 2nd)" required />
-    </div>
-    <div class="form-row">
-      <button type="submit">Add Student</button>
-    </div>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="number" id="age" placeholder="Age" required>
+    <input type="text" id="course" placeholder="Course" required>
+    <input type="text" id="year" placeholder="Year" required>
+    <button type="submit">Add Student</button>
   </form>
 
-  <div id="list"></div>
-
   <script>
-    // Set this to your deployed URL when deployed, or use http://localhost:3000 for local testing
-    const API_URL = 'http://localhost:3000';
+    const apiUrl = "https://student-api-khatheeja-reemu.onrender.com/api/students";
 
-    const listEl = document.getElementById('list');
-    const form = document.getElementById('studentForm');
-
-    async function fetchAndRender() {
-      const res = await fetch(API_URL + '/api/students');
+    async function fetchStudents() {
+      const res = await fetch(apiUrl);
       const students = await res.json();
-      listEl.innerHTML = students.map(s => `
-        <div class="student">
-          <strong>${s.name}</strong> — ${s.course} — age ${s.age} — ${s.year} — ${s.status}
-        </div>
-      `).join('');
+      const list = document.getElementById("studentList");
+      list.innerHTML = "";
+      students.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = `${s.name} (${s.age}) - ${s.course}, ${s.year}`;
+        list.appendChild(li);
+      });
     }
 
-    form.addEventListener('submit', async (e) => {
+    document.getElementById("studentForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const fd = new FormData(form);
-      const payload = {
-        name: fd.get('name'),
-        age: fd.get('age'),
-        course: fd.get('course'),
-        year: fd.get('year')
+      const student = {
+        name: document.getElementById("name").value,
+        age: parseInt(document.getElementById("age").value),
+        course: document.getElementById("course").value,
+        year: document.getElementById("year").value
       };
-
-      const res = await fetch(API_URL + '/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
       });
-
-      if (res.ok) {
-        const newStudent = await res.json();
-        // append new student to the list without full reload
-        const item = document.createElement('div');
-        item.className = 'student';
-        item.innerHTML = `<strong>${newStudent.name}</strong> — ${newStudent.course} — age ${newStudent.age} — ${newStudent.year} — ${newStudent.status}`;
-        listEl.prepend(item);
-        form.reset();
-      } else {
-        const err = await res.json();
-        alert('Failed to add: ' + (err.errors ? err.errors.join(', ') : (err.error || 'unknown')));
-      }
+      e.target.reset();
+      fetchStudents();
     });
 
-    // initial load
-    fetchAndRender();
+    fetchStudents();
   </script>
 </body>
 </html>
