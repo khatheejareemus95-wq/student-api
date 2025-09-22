@@ -39,6 +39,3 @@ npm install
 
 npm start
 
-
-Server will run at:
-👉 http://localhost:3000 (or the port set in PORT env variable)
