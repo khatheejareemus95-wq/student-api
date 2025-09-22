@@ -14,7 +14,7 @@ const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 
 // ensure data dir/file, read/write helpers (see earlier full code sample)...
 
-app.get("/", (req, res) => {
+app.get("/api/students", (req, res) => {
   res.send("🎉 Student API is running! Use /api/students to fetch students.");
 });
 
